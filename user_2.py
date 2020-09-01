@@ -75,7 +75,7 @@ class Cliente():
         a = 1*3.1416*1
         b = exp(-a)
 
-        print(f"kp: {self.kp[1]}, ki: {self.ki[1]}, kd: {self.kd}")
+        # print(f"kp: {self.kp[1]}, ki: {self.ki[1]}, kd: {self.kd}")
 
         self.err_3 = self.err_2
         self.err_2 = self.err_1
@@ -190,6 +190,12 @@ class Cliente():
         for key, var in self.razones.items():
             self.sub_mv.subscribe_data_change(var)
 
+    def subscribir_niveles(self):
+        self.handler_niveles = self.SubHandlerClass()
+        self.sub_niv = self.client.create_subscription(self.periodo, self.handler_niveles)
+        for key, var in self.alturas.items():
+            self.sub_niv.subscribe_data_change(var)
+
 
     def conectar(self):
         try:
@@ -197,6 +203,8 @@ class Cliente():
             self.objects = self.client.get_objects_node()
             print('Cliente OPCUA se ha conectado')
             self.Instanciacion()
+            self.subscribir_niveles()
+
 
         except:
             self.client.disconnect()

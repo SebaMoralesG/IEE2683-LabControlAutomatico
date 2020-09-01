@@ -1,15 +1,68 @@
 from bokeh.plotting import figure, output_file, show, curdoc
 from bokeh.models import ColumnDataSource, PreText, Slider, RadioGroup, Toggle, RadioButtonGroup
 from bokeh.layouts import layout
-from user_2 import Cliente, SubHandler
+from user_2 import Cliente
 from bokeh.models.callbacks import CustomJS
 import random
+import threading
 
+
+def funcion_handler(node, val):
+    global alarma1, alarma2, alarma3, alarma4
+    key = node.get_parent().get_display_name().Text
+    # print('key: {} | val: {}'.format(key, val))
+    if key == "Tanque1":
+        if val < 10:
+            alarma1 = True
+        else:
+            alarma1 = False
+
+    elif key == "Tanque2":
+        if val < 10:
+            alarma2 = True
+        else:
+            alarma2 = False
+
+    elif key == "Tanque3":
+        if val < 10:
+            alarma3 = True
+        else:
+            alarma3 = False
+
+    elif key == "Tanque4":
+        if val < 10:
+            alarma4 = True
+        else:
+            alarma4 = False
+
+
+class SubHandler(object):
+
+    """
+    Subscription Handler. To receive events from server for a subscription
+    data_change and event methods are called directly from receiving thread.
+    Do not do expensive, slow or network operation there. Create another
+    thread if you need to do such a thing
+    """
+
+    def datachange_notification(self, node, val, data):
+        thread_handler = threading.Thread(target=funcion_handler, args=(node, val))  # Se realiza la descarga por un thread
+        thread_handler.start()
+
+    def event_notification(self, event):
+        # print("Python: New event", event)
+        pass
 
 
 class GUI():
 
     def __init__(self):
+        global alarma1, alarma2, alarma3, alarma4
+        alarma1 = False
+        alarma2 = False
+        alarma3 = False
+        alarma4 = False
+
         # init cliente
         self.cliente = Cliente("opc.tcp://localhost:4840/freeopcua/server/", suscribir_eventos=True, SubHandler=SubHandler)
 
@@ -131,22 +184,29 @@ class GUI():
         self.t += 1
 
     def GUI_alarm(self):
-        if (self.cliente.alturas['H1'].get_value() < 10) and (self.alarm_button.active == 0):
+        if (alarma1) and (self.alarm_button.active == 0):
             self.H1_text.style = self.cuadro_alarma
         else:
             self.H1_text.style = self.cuadro_texto
-        if self.cliente.alturas['H2'].get_value() < 10 and (self.alarm_button.active == 0):
+        if alarma2 and (self.alarm_button.active == 0):
             self.H2_text.style = self.cuadro_alarma
         else:
             self.H2_text.style = self.cuadro_texto
-        if self.cliente.alturas['H3'].get_value() < 10 and (self.alarm_button.active == 0):
+        if alarma3 and (self.alarm_button.active == 0):
             self.H3_text.style = self.cuadro_alarma
         else:
             self.H3_text.style = self.cuadro_texto
-        if self.cliente.alturas['H4'].get_value() < 10 and (self.alarm_button.active == 0):
+        if alarma4 and (self.alarm_button.active == 0):
             self.H4_text.style = self.cuadro_alarma
         else:
             self.H4_text.style = self.cuadro_texto
+
+        if self.alarm_button.active:
+            self.H1_text.style = self.cuadro_texto
+            self.H2_text.style = self.cuadro_texto
+            self.H3_text.style = self.cuadro_texto
+            self.H4_text.style = self.cuadro_texto
+
 
     def GUI_mode(self):
         if self.slct_mode.active == 0:
